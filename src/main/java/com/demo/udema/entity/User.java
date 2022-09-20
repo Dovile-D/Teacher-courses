@@ -28,7 +28,7 @@ public class User {
     private String email;
     @Column(name = "role", length = 16)
     private String role;
-    @Column(name = "isEnabled")
+//    @Column(name = "isEnabled")
     private boolean isEnabled;
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)// PK
