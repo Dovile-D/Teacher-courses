@@ -3,7 +3,7 @@ package com.demo.udema.controller;
 import com.demo.udema.entity.User;
 import com.demo.udema.repositoryDAO.UserRepository;
 import com.demo.udema.repositoryDAO.VerificationTokenRepository;
-import com.demo.udema.security.VerificationToken;
+import com.demo.udema.entity.VerificationToken;
 import com.demo.udema.service.EmailSenderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;

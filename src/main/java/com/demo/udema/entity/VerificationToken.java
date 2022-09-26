@@ -1,4 +1,4 @@
-package com.demo.udema.security;
+package com.demo.udema.entity;
 
 import com.demo.udema.entity.User;
 
