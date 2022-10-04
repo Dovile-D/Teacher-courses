@@ -39,7 +39,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/reviews/**").hasAnyRole("TEACHER", "ADMIN")
                 .antMatchers("/reportedList/**").hasAnyRole("ADMIN")
 //   no authentication is required for /register and /confirm URLs as they are the landing pages for a new user
-                .antMatchers("/register").permitAll()
+                .antMatchers("/registration").permitAll()
                 .antMatchers("/confirm").permitAll()
                 .and()
                 .formLogin()

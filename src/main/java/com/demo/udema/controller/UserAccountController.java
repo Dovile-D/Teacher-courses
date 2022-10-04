@@ -1,108 +1,93 @@
 package com.demo.udema.controller;
 
+import com.demo.udema.entity.ConfirmationToken;
 import com.demo.udema.entity.User;
+import com.demo.udema.repositoryDAO.ConfirmationTokenRepository;
 import com.demo.udema.repositoryDAO.UserRepository;
-import com.demo.udema.repositoryDAO.VerificationTokenRepository;
-import com.demo.udema.entity.VerificationToken;
 import com.demo.udema.service.EmailSenderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+@Controller
 public class UserAccountController {
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private VerificationTokenRepository verificationTokenRepository;
+    private ConfirmationTokenRepository confirmationTokenRepository;
 
     @Autowired
     private EmailSenderService emailSenderService;
 
-    @RequestMapping(value = "/register", method = RequestMethod.GET)
-    public ModelAndView displayRegistration(ModelAndView modelAndView, User user) {
+    @RequestMapping(value="/register", method = RequestMethod.GET)
+    public ModelAndView displayRegistration(ModelAndView modelAndView, User user)
+    {
         modelAndView.addObject("user", user);
         modelAndView.setViewName("register");
-
         return modelAndView;
     }
 
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public ModelAndView registerUser(ModelAndView modelAndView, User user) {
-        User existingUser = userRepository.findByUsername(user.getUsername());
-        if(existingUser != null) {
-            modelAndView.addObject("message", "This user already exist!");
+    @RequestMapping(value="/register", method = RequestMethod.POST)
+    public ModelAndView registerUser(ModelAndView modelAndView, User user)
+    {
+
+        User existingUser = userRepository.findByEmail(user.getEmail());
+        if(existingUser != null)
+        {
+            modelAndView.addObject("message","This email already exists!");
             modelAndView.setViewName("error");
         }
-        else {
+        else
+        {
             userRepository.save(user);
 
-            VerificationToken verificationToken = new VerificationToken(user);
+            ConfirmationToken confirmationToken = new ConfirmationToken(user);
 
-            verificationTokenRepository.save(verificationToken);
+            confirmationTokenRepository.save(confirmationToken);
 
             SimpleMailMessage mailMessage = new SimpleMailMessage();
-            mailMessage.setTo(user.getEmail()); //? example (user.getEmailId())
+            mailMessage.setTo(user.getEmail());
             mailMessage.setSubject("Complete Registration!");
-            mailMessage.setFrom("dovile.d.git@gmail.com");
+            mailMessage.setFrom("chand312902@gmail.com");
             mailMessage.setText("To confirm your account, please click here : "
-                    +"http://localhost:8082/confirm-account?token="+verificationToken.getVerificationToken());
+                    +"http://localhost:8082/confirm-account?token="+confirmationToken.getConfirmationToken());
 
             emailSenderService.sendEmail(mailMessage);
 
-            modelAndView.addObject("email", user.getEmail()); // example ("emailId", user.getEmailId())
+            modelAndView.addObject("emailId", user.getEmail());
 
-            modelAndView.setViewName("successfullRegistration");
-
+            modelAndView.setViewName("successfulRegisteration");
         }
 
         return modelAndView;
     }
 
-    @RequestMapping(value = "/confirm-account", method = {RequestMethod.GET, RequestMethod.POST})
-    public ModelAndView confirmUserAccount (ModelAndView modelAndView, @RequestParam("token")String verificationToken) {
-        VerificationToken token = verificationTokenRepository.findVerificationTokenBy(verificationToken);
+    @RequestMapping(value="/confirm-account", method= {RequestMethod.GET, RequestMethod.POST})
+    public ModelAndView confirmUserAccount(ModelAndView modelAndView, @RequestParam("token")String confirmationToken)
+    {
+        ConfirmationToken token = confirmationTokenRepository.findByConfirmationToken(confirmationToken);
 
-        if (token != null) {
-            User user = userRepository.findByUsername(token.getUser().getEmail()); // example userRepository.findByEmailIdIgnoreCase(token.getUser().getEmailId())
+        if(token != null)
+        {
+            User user = userRepository.findByEmail(token.getUser().getEmail());
             user.setEnabled(true);
             userRepository.save(user);
             modelAndView.setViewName("accountVerified");
         }
-        else {
-            modelAndView.addObject("message", "The link is invalid or broken!");
+        else
+        {
+            modelAndView.addObject("message","The link is invalid or broken!");
             modelAndView.setViewName("error");
         }
+
         return modelAndView;
     }
-
     // getters and setters
-
-    public UserRepository getUserRepository() {
-        return userRepository;
-    }
-
-    public void setUserRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public VerificationTokenRepository getVerificationTokenRepository() {
-        return verificationTokenRepository;
-    }
-
-    public void setVerificationTokenRepository(VerificationTokenRepository verificationTokenRepository) {
-        this.verificationTokenRepository = verificationTokenRepository;
-    }
-
-    public EmailSenderService getEmailSenderService() {
-        return emailSenderService;
-    }
-
-    public void setEmailSenderService(EmailSenderService emailSenderService) {
-        this.emailSenderService = emailSenderService;
-    }
 }
+

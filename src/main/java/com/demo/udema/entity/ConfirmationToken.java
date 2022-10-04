@@ -1,21 +1,19 @@
 package com.demo.udema.entity;
 
-import com.demo.udema.entity.User;
-
 import javax.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 
 @Entity
-public class VerificationToken {
+public class ConfirmationToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name="token_id")
     private long tokenid;
 
-    @Column(name="verification_token")
-    private String verificationToken;
+    @Column(name="confirmation_token")
+    private String confirmationToken;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdDate;
@@ -24,14 +22,16 @@ public class VerificationToken {
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
-    public VerificationToken(User user) {
+    public ConfirmationToken(User user) {
         this.user = user;
         createdDate = new Date();
-        verificationToken = UUID.randomUUID().toString();
+        confirmationToken = UUID.randomUUID().toString();
     }
 
-    public VerificationToken() {
+    public ConfirmationToken() {
     }
+
+    // getters and setters
 
     public long getTokenid() {
         return tokenid;
@@ -41,12 +41,12 @@ public class VerificationToken {
         this.tokenid = tokenid;
     }
 
-    public String getVerificationToken() {
-        return verificationToken;
+    public String getConfirmationToken() {
+        return confirmationToken;
     }
 
-    public void setVerificationToken(String verificationToken) {
-        this.verificationToken = verificationToken;
+    public void setConfirmationToken(String confirmationToken) {
+        this.confirmationToken = confirmationToken;
     }
 
     public Date getCreatedDate() {

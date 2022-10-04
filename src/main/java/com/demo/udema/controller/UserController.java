@@ -1,6 +1,8 @@
 package com.demo.udema.controller;
 
 import com.demo.udema.entity.User;
+import com.demo.udema.repositoryDAO.ConfirmationTokenRepository;
+import com.demo.udema.repositoryDAO.UserRepository;
 import com.demo.udema.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +22,12 @@ public class UserController {
     private SecurityService securityService;
     @Autowired
     private UserValidator userValidator;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ConfirmationTokenRepository confirmationTokenRepository;
+    @Autowired
+    private EmailSenderService emailSenderService;
 
     @GetMapping("/registration")
     public String registration(Model model) {
