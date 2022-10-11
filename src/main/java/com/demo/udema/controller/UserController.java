@@ -1,16 +1,19 @@
 package com.demo.udema.controller;
 
+import com.demo.udema.entity.ConfirmationToken;
 import com.demo.udema.entity.User;
 import com.demo.udema.repositoryDAO.ConfirmationTokenRepository;
 import com.demo.udema.repositoryDAO.UserRepository;
 import com.demo.udema.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
@@ -22,12 +25,15 @@ public class UserController {
     private SecurityService securityService;
     @Autowired
     private UserValidator userValidator;
+
+//    _____________nauji @Autowired_________________
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private ConfirmationTokenRepository confirmationTokenRepository;
     @Autowired
     private EmailSenderService emailSenderService;
+
 
     @GetMapping("/registration")
     public String registration(Model model) {
@@ -38,17 +44,80 @@ public class UserController {
         return "registration";
     }
 
-    @PostMapping("/registration")
-    public String registration(@ModelAttribute("userForm") User userForm, BindingResult bindingResult) {
+    @RequestMapping(value = "/registration", method = RequestMethod.POST)
+    public ModelAndView registration (@ModelAttribute("userForm") User userForm, BindingResult bindingResult,    ModelAndView modelAndView, User user, RedirectAttributes redirectAttributes) {
         userValidator.validate(userForm, bindingResult);
 
         if (bindingResult.hasErrors()) {
-            return "registration";
+//            __________________
+            modelAndView.addObject("message","This email already exists!");
+            modelAndView.setViewName("error");
+//            ___________________
+            return modelAndView;
         }
-        userService.save(userForm);
-        securityService.autoLogin(userForm.getUsername(), userForm.getPasswordConfirm());
-        return "redirect:/adminPage";
+        else {
+//            userService.save(userForm);
+//        _______________________kodo gabalas____________________
+//            issaugo user:
+            userRepository.save(user);
+//            sukuria confirmationTokenObjekta
+            ConfirmationToken confirmationToken = new ConfirmationToken(user);
+//  issaugo confirmationToken
+            confirmationTokenRepository.save(confirmationToken);
+// siuncia email
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setTo(user.getEmail());
+            mailMessage.setSubject("Complete Registration!");
+            mailMessage.setFrom("dovdau27@gmail.com");
+            mailMessage.setText("To confirm your account, please click here : "
+                    + "http://localhost:8084/confirm-account?token=" + confirmationToken.getConfirmationToken());
+
+            emailSenderService.sendEmail(mailMessage);
+            modelAndView.addObject("email", user.getEmail());
+
+            redirectAttributes.addFlashAttribute("message", "A verification email has been sent to your email");
+
+
+            modelAndView.setViewName("redirect:/login");
+
+        }
+
+        return modelAndView;
     }
+
+
+//        _____________________kodo gabalo pabaiga_______________________
+
+//        securityService.autoLogin(userForm.getUsername(), userForm.getPasswordConfirm());
+//        return "redirect:/adminPage";
+//    }
+
+//    ________________________kodo gabalas 2__________________________________
+
+@RequestMapping(value="/confirm-account", method= {RequestMethod.GET, RequestMethod.POST})
+public ModelAndView confirmUserAccount(ModelAndView modelAndView, @RequestParam("token")String confirmationToken, RedirectAttributes redirectAttributes)
+{
+    ConfirmationToken token = confirmationTokenRepository.findByConfirmationToken(confirmationToken);
+
+    if(token != null)
+    {
+        User user = userRepository.findByEmail(token.getUser().getEmail());
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("message", "Congratulations! Your account has been activated and email is verified! Please, login to continue. ");
+        modelAndView.setViewName("redirect:/login");
+    }
+    else
+    {
+        modelAndView.addObject("message","The link is invalid or broken!");
+        modelAndView.setViewName("error");
+    }
+
+    return modelAndView;
+}
+
+//    ________________________kodo gabalao 2 pabaiga____________________________
 
     @GetMapping("/login")
     public String login(Model model, String error, String logout) {
